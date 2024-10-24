@@ -1,27 +1,20 @@
-// import mongoose from "mongoose";
-// import dotenv from "dotenv";
+import { PrismaClient } from "@prisma/client";
 
-// dotenv.config();
+const prisma = new PrismaClient();
 
-// const DATABASE_URL = process.env.MONGOURI;
+const connectDatabase = async (): Promise<void> => {
+  try {
+    await prisma.$connect();
+    console.log("Database connected");
+  } catch (error) {
+    console.error("Failed to connect to database:", error);
+    process.exit(1);
+  }
+};
 
-// const connectDB = async () => {
-//   try {
-//     mongoose.connect(DATABASE_URL, {
-//       serverSelectionTimeoutMS: 30000,
-//     });
-//     console.log("MongoDB connected successfully");
-//   } catch (error) {
-//     console.error(error);
-//     process.exit(1);
-//   }
-// };
-// connectDB();
-// const db = mongoose.connection;
+const disconnectDatabase = async (): Promise<void> => {
+  await prisma.$disconnect();
+  console.log("Database disconnect");
+};
 
-// db.on("error", console.error.bind(console, "Mongodb connection error"));
-// db.once("open", () => {
-//   console.log("Connected to MongoDB");
-// });
-
-// export default db;
+export { prisma, connectDatabase, disconnectDatabase };

@@ -1,26 +1,29 @@
-import { NextFunction, Request, Response } from "express";
+import Joi from "joi";
+
+import catchAsync from "../utils/catchAsync";
 import prisma from "../../client";
-import { ProductDTO } from "./dto";
+
+const createProduct = {
+  body: Joi.object().keys({
+    Name: Joi.string().required(),
+    Quantity: Joi.number().required(),
+    Category: Joi.string().required(),
+  }),
+};
 
 export default class ProductController {
-  static async createOneProduct(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) {
-    try {
-      const productData: ProductDTO = req.body;
-      const product = await prisma.product.create({
-        data: productData,
-      });
-      return res.status(201).json({
-        status: true,
-        message: "Product created successfully",
-        data: product,
-      });
-    } catch (error) {
-      // Forwarding error to the error handler middleware using next()
-      next(error);
-    }
-  }
+  static createOneProduct = catchAsync(async (req, res) => {
+    const { Name, Quantity, Category } = req.body;
+    const productExists = await prisma.products.findUnique({
+      where: { Name: Name },
+    });
+    if (productExists) return res.status(200).json("It exists");
+    console.log(productExists);
+
+    const product = await prisma.products.create({
+      data: { Name: Name, Quantity: Quantity, Category: Category },
+    });
+    console.log(product);
+    return res.status(201).json(product);
+  });
 }
