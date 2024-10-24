@@ -8,12 +8,10 @@ export default class ProductController {
       where: { Name: Name },
     });
     if (productExists) return res.status(200).json("The Name must be unique");
-    console.log(productExists);
 
     const product = await prisma.products.create({
       data: { Name: Name, Quantity: Quantity, Category: Category },
     });
-    console.log(product);
     return res.status(201).json(product);
   });
 
