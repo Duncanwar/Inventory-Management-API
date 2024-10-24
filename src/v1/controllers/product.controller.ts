@@ -1,5 +1,3 @@
-import Joi from "joi";
-
 import catchAsync from "../utils/catchAsync";
 import prisma from "../../client";
 
@@ -24,9 +22,7 @@ export default class ProductController {
     const { Quantity, ...data } = req.body;
     if (Quantity < 0) return res.status(409).json("Invalid Input");
 
-    const productExists = await prisma.products.findFirst({
-      where: { ID: id },
-    });
+    const productExists = await this.findProductById(id);
     if (!productExists)
       return res.status(404).json("The product to be updated is not present");
 
@@ -46,16 +42,11 @@ export default class ProductController {
     const { id } = req.params;
     if (!id) return res.status(404).json("not found");
 
-    const product = await prisma.products.findUnique({ where: { ID: id } });
-    if (!product)
-      return res.status(404).json("The product to be deleted is not present");
+    const [product, afterDelete] = await Promise.all([
+      prisma.products.findUnique({ where: { ID: id } }),
+      prisma.products.delete({ where: { ID: id } }),
+    ]);
 
-    if (product?.Quantity && product.Quantity > 0)
-      return res
-        .status(200)
-        .json("The product to be deleted has quantity greater than zero");
-
-    const afterDelete = await prisma.products.delete({ where: { ID: id } });
     return res.status(200).json({
       message: "Deleted",
       before: product,
@@ -67,13 +58,17 @@ export default class ProductController {
     const { id } = req.params;
     if (!id) return res.status(404).json("not found");
 
-    const product = await prisma.products.findUnique({ where: { ID: id } });
+    const product = await this.findProductById(id);
     if (!product) return res.status(404).json("The product is not present");
     return res.status(200).json({ msg: "retrieve", data: product });
   });
 
   static getAllProducts = catchAsync(async (req, res) => {
     const products = await prisma.products.findMany();
-    return res.status(200).json({ msg: "retrieve All", data: products });
+    return res.status(200).json({ msg: "retrieve Allx", data: products });
   });
+
+  static findProductById = async (id: string) => {
+    return await prisma.products.findUnique({ where: { ID: id } });
+  };
 }
