@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",  
     "start": "npx prisma generate dev && node dist/index.js",
-    "dev": "npx prisma generate dev && nodemon --exec ts-node src/index.ts"
+    "dev": "npx prisma generate dev && nodemon --exec ts-node src/app.ts"
   },
   "keywords": [],
   "author": "",

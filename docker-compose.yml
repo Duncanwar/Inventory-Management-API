@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3'
 
 services:
   inventory-api:
@@ -12,8 +12,6 @@ services:
       - NODE_ENV=production
     depends_on:
       - mongodb
-    networks:
-      - inventory-network
     volumes:
       - .:/usr/src/app  # Binds the current directory to the container
 
@@ -22,14 +20,3 @@ services:
     container_name: mongodb
     ports:
       - "27017:27017"  # Expose MongoDB port
-    networks:
-      - inventory-network
-    volumes:
-      - mongo-data:/data/db
-
-networks:
-  inventory-network:
-    driver: bridge
-
-volumes:
-  mongo-data:
