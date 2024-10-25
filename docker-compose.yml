@@ -6,7 +6,5 @@ services:
       context: .
     ports:
       - "8000:8000"
-    volumes:
-      - .:/usr/src/app  
     environment:
       DATABASE_URL: ${DATABASE_URL}
