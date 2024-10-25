@@ -1,6 +1,9 @@
+version: '3.8'
 services:
   inventory_api:
     container_name: inventory_api_app
+    build:
+      context: .
     ports:
       - "8000:8000"
     volumes:
