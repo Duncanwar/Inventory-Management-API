@@ -11,9 +11,6 @@ const PORT = process.env.PORT || 8000;
 app.use(express.json());
 
 app.use("/api/v1", indexRoute);
-app.get("*", (req, res) => {
-  res.status(200).json("Hello World");
-});
 
 const startServer = async (): Promise<void> => {
   try {

@@ -10,6 +10,8 @@ router.delete("/:id", ProductController.deleteOneProduct);
 
 router.get("/:id", ProductController.getOneProduct);
 
+// router.get("/product", ProductController.getProductsByCategoryOrQuantity);
+
 router.get("/", ProductController.getAllProducts);
 
 router.post(

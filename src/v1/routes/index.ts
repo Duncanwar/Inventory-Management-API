@@ -4,6 +4,6 @@ import productRoute from "./product.route";
 
 const route: Router = Router();
 
-route.use("/products", productRoute);
+route.use("/products/", productRoute);
 
 export default route;
