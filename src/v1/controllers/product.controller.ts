@@ -57,7 +57,16 @@ export default class ProductController {
     if (!product) return res.status(404).json("Product not found");
 
     await prisma.products.delete({ where: { ID: id } });
+    // const product = await this.findProductById(id);
+    // if (!product)
+    //   return res.status(404).json("The product to be deleted is not present");
 
+    // if (product?.Quantity ??0 > 0)
+    //   return res
+    //     .status(200)
+    //     .json("The product to be deleted has quantity greater than zero");
+
+    // const afterDelete = await prisma.products.delete({ where: { ID: id } });
     return res.status(200).json({
       message: "Deleted",
       before: product,
