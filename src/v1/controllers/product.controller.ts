@@ -1,6 +1,9 @@
+import { Prisma, Products } from "@prisma/client";
 import catchAsync from "../utils/catchAsync";
 import prisma from "../../client";
 import Response from "../utils/response";
+import { ProductDTO } from "./dto";
+import { paginate } from "../utils/paginate";
 
 export default class ProductController {
   static findProductById = async (id: string) => {
@@ -35,42 +38,36 @@ export default class ProductController {
 
     const productExists = await this.findProductById(id);
     if (!productExists)
-      return res.status(404).json("The product to be updated is not present");
+      return Response.send(
+        res,
+        400,
+        "The product to be updated is not present"
+      );
 
     const updateProduct = await prisma.products.update({
       where: { ID: id },
       data: { Quantity, ...data },
     });
 
-    return res.status(200).json({
-      message: "Updated",
-      before: productExists,
-      after: updateProduct,
-    });
+    return Response.send(res, 200, "Updated", updateProduct);
   });
 
   static deleteOneProduct = catchAsync(async (req, res) => {
     const { id } = req.params;
     if (!id) return res.status(400).json("ID not provided");
 
-    const product = await prisma.products.findUnique({ where: { ID: id } });
+    const product = await this.findProductById(id);
     if (!product) return res.status(404).json("Product not found");
 
     await prisma.products.delete({ where: { ID: id } });
-    // const product = await this.findProductById(id);
-    // if (!product)
-    //   return res.status(404).json("The product to be deleted is not present");
 
-    // if (product?.Quantity ??0 > 0)
-    //   return res
-    //     .status(200)
-    //     .json("The product to be deleted has quantity greater than zero");
+    if (product?.Quantity ?? 0 > 0)
+      return res
+        .status(200)
+        .json("The product to be deleted has quantity greater than zero");
 
-    // const afterDelete = await prisma.products.delete({ where: { ID: id } });
-    return res.status(200).json({
-      message: "Deleted",
-      before: product,
-    });
+    const afterDelete = await prisma.products.delete({ where: { ID: id } });
+    return Response.send(res, 200, "Deleted", afterDelete);
   });
 
   static getOneProduct = catchAsync(async (req, res) => {
@@ -83,59 +80,34 @@ export default class ProductController {
   });
 
   static getAllProducts = catchAsync(async (req, res) => {
-    console.log(req.query);
-    const { quantity } = req.query;
-    const products = await prisma.products.findMany();
-    // const prod = await prisma.products.groupBy({
-    //   by:['Category'],
-    //   where: {
-    //     Quantity: {
-    //       _avg:{} quantity,
-    //     },
-    //   },
-    // });
-    return res.status(200).json({ msg: "retrieve All", data: products });
-  });
+    try {
+      const { Category, minQuantity, maxQuantity } = req.query;
+      const page = parseInt(req.query.page as string) || 0;
+      const size = parseInt(req.query.size as string) || 0;
 
-  static getProductsByCategoryOrQuantity = catchAsync(async (req, res) => {
-    const { Category, Quantity } = req.query;
+      const filter: Record<string, any> = {};
 
-    // Define the filter type
-    const filter: {
-      Category?: {
-        contains: string;
-        mode: "insensitive";
-      };
-      Quantity?: {
-        lt: number;
-      };
-    } = {};
+      if (Category) filter.Category = Category as string;
 
-    // Check if Category is provided and add it to the filter
-    if (Category) {
-      filter.Category = {
-        contains: Category as string, // Cast to string since query parameters are strings
-        mode: "insensitive", // Makes the search case insensitive
-      };
-    }
-
-    // Check if Quantity is provided and is a valid number
-    if (Quantity) {
-      const quantityLimit = Number(Quantity);
-      if (!isNaN(quantityLimit)) {
-        filter.Quantity = {
-          lt: quantityLimit, // Find products with Quantity less than the specified limit
-        };
-      } else {
-        return res.status(400).json({ message: "Invalid Quantity" });
+      if (minQuantity || maxQuantity) {
+        filter.Quantity = {};
+        if (maxQuantity) filter.Quantity.lt = parseInt(maxQuantity as string);
       }
-    }
 
-    // Fetch products using the constructed filter
-    const products = await prisma.products.findMany({
-      where: filter,
-    });
-
-    return Response.send(res, 200, "retrieved products", products);
+      const products = await paginate(prisma.products, page, size, filter);
+      return Response.send(res, 200, "Retrieve Products", products);
+    } catch (error) {}
   });
+
+  static filterProductsByCategoryOrQuantity = async (query: any) => {
+    const quantity = query.quantity as string;
+    const parseQuantity = parseInt(quantity);
+    return await prisma.products.findMany({
+      where: {
+        Quantity: {
+          lt: parseQuantity,
+        },
+      },
+    });
+  };
 }
