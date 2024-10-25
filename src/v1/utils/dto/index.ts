@@ -11,3 +11,10 @@ export interface IPage<T = any> {
   totalPages?: number;
   currentPage?: number;
 }
+
+export interface EventLog {
+  action: string;
+  productId: string;
+  details: object;
+  timestamp: Date;
+}

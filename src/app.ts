@@ -23,7 +23,6 @@ const startServer = async (): Promise<void> => {
     process.exit(1);
   }
 };
-console.log(`Server is running on port ${PORT}`);
 startServer().catch(console.error);
 
 process.on("SIGINT", async () => {

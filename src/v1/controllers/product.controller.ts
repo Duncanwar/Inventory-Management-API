@@ -1,9 +1,8 @@
-import { Prisma, Products } from "@prisma/client";
+import { addLog } from "../utils/eventLogger";
 import catchAsync from "../utils/catchAsync";
 import prisma from "../../client";
-import Response from "../utils/response";
-import { ProductDTO } from "./dto";
 import { paginate } from "../utils/paginate";
+import Response from "../utils/response";
 
 export default class ProductController {
   static findProductById = async (id: string) => {
@@ -27,6 +26,8 @@ export default class ProductController {
       data: { Name, Quantity, Category },
     });
 
+    addLog("Added", product.ID, { Name, Quantity, Category });
+
     return Response.send(res, 201, "Product created", product);
   });
 
@@ -48,7 +49,7 @@ export default class ProductController {
       where: { ID: id },
       data: { Quantity, ...data },
     });
-
+    addLog("Updated", id, { Quantity, ...data });
     return Response.send(res, 200, "Updated", updateProduct);
   });
 
@@ -67,6 +68,9 @@ export default class ProductController {
         .json("The product to be deleted has quantity greater than zero");
 
     const afterDelete = await prisma.products.delete({ where: { ID: id } });
+
+    addLog("Deleted", id, {});
+
     return Response.send(res, 200, "Deleted", afterDelete);
   });
 
@@ -98,16 +102,4 @@ export default class ProductController {
       return Response.send(res, 200, "Retrieve Products", products);
     } catch (error) {}
   });
-
-  static filterProductsByCategoryOrQuantity = async (query: any) => {
-    const quantity = query.quantity as string;
-    const parseQuantity = parseInt(quantity);
-    return await prisma.products.findMany({
-      where: {
-        Quantity: {
-          lt: parseQuantity,
-        },
-      },
-    });
-  };
 }
