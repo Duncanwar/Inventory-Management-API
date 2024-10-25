@@ -1,35 +1,11 @@
 version: '3.8'
-
 services:
-  inventory-api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: inventory-management-api
+  inventory_api:
+    container_name: inventory_api_app
+    image: akashi77/test-app
     ports:
-      - "5000:3000"  # Maps the internal port 3000 to 5000 on the host
+      - 8000:8000
+    volumes:
+      - .:/usr/src/app
     environment:
-      - NODE_ENV=production
-    depends_on:
-      - mongodb
-    networks:
-      - inventory-network
-    volumes:
-      - .:/usr/src/app  # Binds the current directory to the container
-
-  mongodb:
-    image: mongo:5.0
-    container_name: mongodb
-    ports:
-      - "27017:27017"  # Expose MongoDB port
-    networks:
-      - inventory-network
-    volumes:
-      - mongo-data:/data/db
-
-networks:
-  inventory-network:
-    driver: bridge
-
-volumes:
-  mongo-data:
+      DATABASE_URL: ${DATABASE_URL}

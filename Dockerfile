@@ -1,33 +1,22 @@
-# Stage 1: Build the project
-FROM node:18-bullseye-slim AS base
-
+FROM node:20-bullseye-slim AS base
 WORKDIR /usr/src/app
+# THIS IS TO ENABLE PRISMA TO DETECT REQUIRED FILES
+RUN apt-get update && apt-get install -y openssl libssl-dev
 
-# Install dependencies
-COPY ./package.json ./package-lock.json ./
-RUN npm install --frozen-lockfile
+FROM base AS build
+COPY ./package.json ./tsconfig.json ./
+RUN yarn install --frozen-lockfile
+COPY . .
+RUN yarn prisma:generate && yarn build
 
-# Copy the TypeScript configuration and source code
-COPY ./tsconfig.json ./tsconfig.json
-COPY ./src ./src
+FROM base AS production
+COPY --from=build /usr/src/app/dist ./dist
+COPY --from=build /usr/src/app/node_modules ./node_modules
+COPY --from=build /usr/src/app/package.json ./package.json
+COPY --from=build /usr/src/app/prisma ./prisma
+# COPY --from=build /usr/src/app/.env ./.env
 
-# Build the project (will output to ./dist)
-RUN npm run build
+EXPOSE 8000
 
-# Stage 2: Create a smaller image for production
-FROM node:18-bullseye-slim AS production
+CMD ["yarn", "start"]
 
-WORKDIR /usr/src/app
-
-# Copy the build output from the previous stage
-COPY --from=base /usr/src/app/dist ./dist
-
-# Copy necessary files for running in production
-COPY --from=base /usr/src/app/node_modules ./node_modules
-COPY ./package.json ./package.json
-
-# Expose the port (if your app runs on port 5000, adjust if needed)
-EXPOSE 5000
-
-# Run the application
-CMD ["npm", "run", "start"]

@@ -4,8 +4,6 @@ import { connectDatabase, disconnectDatabase } from "./v1/config/database";
 
 const app = express();
 
-// import "./v1/config/database.js";
-
 const PORT = process.env.PORT || 8000;
 
 app.use(express.json());
