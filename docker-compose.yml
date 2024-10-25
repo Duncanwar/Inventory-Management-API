@@ -1,22 +1,9 @@
-version: '3'
-
 services:
-  inventory-api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: inventory-management-api
+  inventory_api:
+    container_name: inventory_api_app
     ports:
-      - "5000:3000"  # Maps the internal port 3000 to 5000 on the host
-    environment:
-      - NODE_ENV=production
-    depends_on:
-      - mongodb
+      - 8000:8000
     volumes:
-      - .:/usr/src/app  # Binds the current directory to the container
-
-  mongodb:
-    image: mongo:5.0
-    container_name: mongodb
-    ports:
-      - "27017:27017"  # Expose MongoDB port
+      - .:/usr/src/app
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
