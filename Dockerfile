@@ -1,20 +1,33 @@
+# Stage 1: Build the project
 FROM node:18-bullseye-slim AS base
-WORKDIR /usr/src/app
-# THIS IS TO ENABLE PRISMA TO DETECT REQUIRED FILES
-RUN apt-get update && apt-get install -y openssl libssl-dev
 
-FROM base AS build
+WORKDIR /usr/src/app
+
+# Install dependencies
 COPY ./package.json ./package-lock.json ./
 RUN npm install --frozen-lockfile
-COPY . .
-RUN npx prisma generate && npm run build
 
-FROM base AS production
-COPY --from=build /usr/src/app/dist ./dist
-COPY --from=build /usr/src/app/node_modules ./node_modules
-COPY --from=build /usr/src/app/package.json ./package.json
-COPY --from=build /usr/src/app/package-lock.json ./package-lock.json
-COPY --from=build /usr/src/app/prisma ./prisma
-# COPY --from=build /usr/src/app/.env ./.env
+# Copy the TypeScript configuration and source code
+COPY ./tsconfig.json ./tsconfig.json
+COPY ./src ./src
 
-CMD ["npm","start"]
+# Build the project (will output to ./dist)
+RUN npm run build
+
+# Stage 2: Create a smaller image for production
+FROM node:18-bullseye-slim AS production
+
+WORKDIR /usr/src/app
+
+# Copy the build output from the previous stage
+COPY --from=base /usr/src/app/dist ./dist
+
+# Copy necessary files for running in production
+COPY --from=base /usr/src/app/node_modules ./node_modules
+COPY ./package.json ./package.json
+
+# Expose the port (if your app runs on port 5000, adjust if needed)
+EXPOSE 5000
+
+# Run the application
+CMD ["npm", "run", "start"]
