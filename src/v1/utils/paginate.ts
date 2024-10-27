@@ -3,18 +3,21 @@ import { DefaultArgs } from "@prisma/client/runtime/library";
 
 export const paginate = async (
   model: Prisma.ProductsDelegate<DefaultArgs>,
-  page = 0,
-  size = 10,
-  filter: Record<string, any> = {} // Optional filter
+  page = 1, // Default to 1 to avoid skipping results
+  size = 100, // Large default size to fetch all items
+  filter: Record<string, any> = {}
 ) => {
-  const skip = (page - 1) * size;
+  // If page or size is 0, retrieve all without pagination
+  const skip = page > 0 ? (page - 1) * size : undefined;
+  const take = size > 0 ? size : undefined;
+
   const products = await model.findMany({
     where: filter,
     skip,
-    take: size,
+    take,
   });
   const totalItems = await model.count({ where: filter });
-  const totalPages = Math.ceil(totalItems / size);
+  const totalPages = size > 0 ? Math.ceil(totalItems / size) : 1; // Handle cases without pagination
 
   return { products, page, totalPages, totalItems };
 };
