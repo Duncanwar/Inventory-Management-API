@@ -16,7 +16,5 @@ COPY --from=build /usr/src/app/package.json ./package.json
 COPY --from=build /usr/src/app/prisma ./prisma
 # COPY --from=build /usr/src/app/.env ./.env
 
-EXPOSE 8000
-
 CMD ["yarn", "start"]
 
